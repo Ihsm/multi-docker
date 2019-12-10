@@ -1,0 +1,23 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t unssee/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run unssee/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t unssee/multi-client ./client
+    - docker build -t unssee/multi-nginx ./nginx
+    - docker build -t unssee/multi-server ./server
+    - docker build -t unssee/multi-worker ./worker
+# Log in to the docker cli
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# Take those images and push them to duckerhub
+- docker push unssee/multi-client
+- docker push unssee/multi-nginx
+- docker push unssee/multi-server
+- docker push unssee/multi-worker
+
